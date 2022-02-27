@@ -52,21 +52,27 @@ figure();
 plot(Stress,Fiber_dist);
 xlabel("Stress--->")
 ylabel("x----->")
+title("Stress Profile[Elastic]")
 axis ( [-2*max(Stress) 2*max(Stress) -d d] )
 grid on;
 axis square;
 
-figure;
-plot(Curvature(1:counter-1),Moment(1:counter-1));
-xlabel("Curvature--->")
-xlabel("Moment(kN/m)----->")
 
 %Case-2: Strain softening, e_y<e<e_max
 e=curr_phi*(d/2); %Strain in extreme fiber
-while(e<=e_y)
+while(e<=e_max)
     %Calculate strains
     Strain=curr_phi.*Fiber_dist;
-    Stress=E*Strain;
+    for k=1:length(Strain)
+        if(-e_y<Strain(k) && Strain(k)<e_y)
+            Stress(k)=E*Strain(k);
+        elseif(Strain(k)>e_y)
+            Stress(k)=sig_y-s_ratio*E*(Strain(k)-e_y);
+        elseif(Strain(k)<-e_y)
+            Stress(k)=-sig_y-s_ratio*E*(Strain(k)+e_y);
+        end
+    end
+
     Moment(counter,1)=sum(Stress.*Fiber_dist*b*Fiber_depth*1e-6);
     Curvature(counter,1)=curr_phi;
     curr_phi=curr_phi+d_phi;
@@ -78,6 +84,7 @@ figure();
 plot(Stress,Fiber_dist);
 xlabel("Stress--->")
 ylabel("x----->")
+title("Stress Profile[Strain softening]")
 axis ( [-2*max(Stress) 2*max(Stress) -d d] )
 grid on;
 axis square;
@@ -85,4 +92,5 @@ axis square;
 figure;
 plot(Curvature(1:counter-1),Moment(1:counter-1));
 xlabel("Curvature--->")
-xlabel("Moment(kN/m)----->")
+ylabel("Moment(kN/m)----->")
+title("M-phi curve")
