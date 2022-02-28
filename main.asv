@@ -91,16 +91,15 @@ axis square;
 
 
 %Case-3: Elastic Unloading , e_y<e<e_max
-curr_phi=curr_phi-d_phi; 
 e=curr_phi*(d/2); %Strain in extreme fiber
 d_strain=d_phi.*Fiber_dist;
-while(e_max-2*e_y<e)
+while(e_y<e<e_max)
     %Calculate delta strains
-    Strain=Strain-d_strain;  %Reduce strains
-    Stress=Stress-E*d_strain; %Remove elastic stress
+    Strain=Strain-d_strain;
+    Stress=Stress-E*d_strain;
     Moment(counter,1)=sum(Stress.*Fiber_dist*b*Fiber_depth*1e-6);
-    Curvature(counter,1)=curr_phi; %Add curvature
-    curr_phi=curr_phi-d_phi;
+    Curvature(counter,1)=curr_phi;
+    curr_phi=curr_phi+d_phi;
     e=curr_phi*(d/2);
     counter=counter+1;
     
@@ -109,7 +108,7 @@ figure();
 plot(Stress,Fiber_dist);
 xlabel("Stress--->")
 ylabel("x----->")
-title("Stress Profile[Unloading]")
+title("Stress Profile[Strain softening]")
 axis ( [-2*max(Stress) 2*max(Stress) -d d] )
 grid on;
 axis square;
