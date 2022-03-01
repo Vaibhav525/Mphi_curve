@@ -10,7 +10,7 @@ d_phi=1e-8;  %Delta phi, mm^-1
 E=2e5;        %Young's Modulus N/mm2
 sig_y=250;    %Yield stress:   Mpa
 e_y=sig_y/E;  %Yield strain
-s_ratio=0.1;  %Strain softening ratio E_soft=-E*s_ratio
+s_ratio=-0.2;  %Strain softening ratio E_soft=-E*s_ratio
 E_soft=-E*s_ratio;
 e_max=0.0035; %Maximum strain after which unloading occurs
 %kinematic softening 
@@ -172,14 +172,14 @@ grid on;
 axis square;
 
 
-%Case-5: Elastic Reloading , -e_max<e
-curr_phi=curr_phi-d_phi; 
+%Case-5: Elastic Reloading , e<-e_max+2*e_y
+curr_phi=curr_phi+d_phi; 
 e=curr_phi*(d/2); %Strain in extreme fiber
 d_strain=d_phi.*Fiber_dist;
 
 while(e<-e_max+2*e_y)
     %Calculate delta strains
-    Strain=Strain-d_strain;  %Reduce strains
+    Strain=Strain+d_strain;  %Reduce strains
     Stress=Stress+E*d_strain;
     Moment(counter,1)=sum(Stress.*Fiber_dist*b*Fiber_depth*1e-6);
     Curvature(counter,1)=curr_phi; %Add curvature
@@ -196,6 +196,53 @@ title("Stress Profile[Elastic Reloading]")
 axis ( [-2*max(Stress) 2*max(Stress) -d d] )
 grid on;
 axis square;
+
+%Case-4: Strain softening Reloading , e<e_max
+curr_phi=curr_phi-d_phi; 
+e=curr_phi*(d/2); %Strain in extreme fiber
+d_strain=d_phi.*Fiber_dist;
+
+while(e<e_max)
+  
+    %Calculate delta strains
+    Strain=Strain+d_strain;  %Reduce strains
+    %Add strain softening stress
+    for k=1:length(Strain)
+    if(d_strain(k)>0)
+        if((-Strain(k))-Soft_lim_Strain(k)>0)
+            Stress(k)=Stress(k)+E*d_strain(k);
+        else
+            Stress(k)=Stress(k)-s_ratio*E*d_strain(k);
+        end
+    else
+        if((-Strain(k))-Soft_lim_Strain(k)<0)
+            Stress(k)=Stress(k)+E*d_strain(k);
+        else
+            Stress(k)=Stress(k)-s_ratio*E*d_strain(k);
+        end
+
+    end
+    end
+
+    Moment(counter,1)=sum(Stress.*Fiber_dist*b*Fiber_depth*1e-6);
+    Curvature(counter,1)=curr_phi; %Add curvature
+    curr_phi=curr_phi+d_phi;
+    e=curr_phi*(d/2);
+    counter=counter+1;
+    
+end
+
+
+figure();
+plot(Stress,Fiber_dist);
+xlabel("Stress--->")
+ylabel("x----->")
+title("Stress Profile[Reloading-Strain softening]")
+axis ( [-2*max(Stress) 2*max(Stress) -d d] )
+grid on;
+axis square;
+
+
 
 
 figure;
